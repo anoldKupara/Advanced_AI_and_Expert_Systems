@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Healthcare Diagnosis</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">AI-Powered Healthcare Diagnosis</h1>
+        <form id="diagnosisForm">
+            <div class="form-group">
+                <label for="symptoms">Enter your symptoms (comma-separated):</label>
+                <input type="text" id="symptoms" class="form-control" placeholder="e.g., fever, headache, nausea">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Diagnose</button>
+        </form>
+
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <!-- JS to handle form submission -->
+    <script>
+        document.getElementById('diagnosisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const symptoms = document.getElementById('symptoms').value
+                .split(',')
+                .map(symptom => symptom.trim())
+                .filter(symptom => symptom !== "");
+
+            const response = await fetch('/diagnose', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symptoms })
+            });
+
+            const result = await response.json();
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
+            if (result.status === 'success') {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>Possible diagnosis:</strong>
+                        <ul>
+                            ${result.diagnoses.map(d => `<li>${d} (${result.match_count} matching symptoms)</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        ${result.message}
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
